@@ -24,8 +24,15 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  const logout = () => {
-    signOut(auth);
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      // No need to manually redirect here,
+      // the onAuthStateChanged listener in the dashboard layout
+      // will detect the user is null and redirect automatically.
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
   };
 
   return (

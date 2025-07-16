@@ -194,49 +194,7 @@ export default function CourseViewer({
 
   return (
     <div className="flex flex-col h-screen bg-background text-text-primary">
-      <header className="flex-shrink-0 bg-surface-dark shadow-lg z-30 border-b border-surface-light/50">
-        <div className="flex items-center justify-between h-16 px-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="md:hidden text-text-primary"
-            >
-              <Menu size={24} />
-            </button>
-            <Link
-              href={isGuestMode ? "/" : "/dashboard"}
-              className="flex items-center gap-2 text-xl font-bold text-primary"
-            >
-              <BookOpen />
-              <span className="hidden sm:inline">YT Course Taker</span>
-            </Link>
-          </div>
-          <div className="flex items-center gap-4">
-            {isGuestMode ? (
-              <Link
-                href="/account"
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-background font-semibold rounded-md hover:bg-primary-dark transition-colors"
-              >
-                <LogIn size={18} />
-                <span>Login to Save</span>
-              </Link>
-            ) : (
-              <>
-                <span className="text-text-secondary hidden sm:block">
-                  Welcome, {user?.email}
-                </span>
-                <button
-                  onClick={logout}
-                  className="flex items-center gap-2 px-4 py-2 bg-error/80 text-white font-semibold rounded-md hover:bg-error transition-colors"
-                >
-                  <LogOut size={18} />
-                  <span>Sign Out</span>
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      
 
       <main className="flex-grow flex overflow-hidden">
         {/* DESKTOP SIDEBAR - MODIFIED FOR STICKY HEADER AND SCROLL */}
