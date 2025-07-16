@@ -77,7 +77,7 @@ export default function DashboardPage() {
             Your dashboard is empty!
           </h2>
           <p className="text-gray-500">
-            Click 'Add Course' to save your first YouTube video.
+            Click &apos;Add Course&apos; to save your first YouTube video.
           </p>
         </div>
       )}

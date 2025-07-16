@@ -42,7 +42,7 @@ export default function TryPage() {
         <h1 className="text-4xl font-bold text-primary mb-2">Try a Demo</h1>
         <p className="text-text-secondary mb-8">
           Paste a YouTube URL with timestamps to start a guest session. Your
-          progress won't be saved.
+          progress won&apos;t be saved.
         </p>
         <form onSubmit={handleLoadCourse} className="flex gap-2">
           <input
