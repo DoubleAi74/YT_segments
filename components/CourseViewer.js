@@ -12,6 +12,8 @@ import {
   LogOut,
   Download,
   LogIn,
+  Menu, // Added for mobile menu
+  X, // Added for mobile close button
 } from "lucide-react";
 import jsPDF from "jspdf";
 
@@ -27,10 +29,11 @@ export default function CourseViewer({
   onSegmentChange,
   isGuestMode = false,
 }) {
-  const { user, logout } = useAuth(); // Get user and logout from context
+  const { user, logout } = useAuth();
   const [courseData, setCourseData] = useState(initialCourseData);
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
   const [activeNote, setActiveNote] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for mobile drawer
 
   const playerRef = useRef(null);
   const segmentCheckInterval = useRef(null);
@@ -110,7 +113,6 @@ export default function CourseViewer({
       const updatedSegment = { ...seg, completed: !seg.completed };
       const updatedSegments = [...segments];
       updatedSegments[indexToToggle] = updatedSegment;
-
       setCourseData((prev) => ({ ...prev, segments: updatedSegments }));
       if (!isGuestMode && onSegmentChange)
         onSegmentChange(indexToToggle, updatedSegment);
@@ -157,18 +159,68 @@ export default function CourseViewer({
 
   const completedCount = segments.filter((s) => s.completed).length;
 
+  // Reusable component for the segment list to avoid duplication
+  const SegmentList = () => (
+    <>
+      <div className="flex items-center justify-between p-3">
+        <h2 className="text-lg font-bold text-text-primary truncate">
+          {title}
+        </h2>
+        <button
+          onClick={() => setIsSidebarOpen(false)}
+          className="md:hidden p-1 text-text-primary"
+        >
+          <X size={24} />
+        </button>
+      </div>
+      <div className="border-t border-surface-light my-2"></div>
+      {segments.map((seg, index) => (
+        <div
+          key={index}
+          className={`flex items-center justify-between p-3 mb-1 rounded-lg cursor-pointer transition-colors ${
+            index === currentSegmentIndex
+              ? "bg-primary/20 text-primary-dark font-semibold"
+              : "hover:bg-surface-light"
+          }`}
+          onClick={() => {
+            displaySegment(index);
+            setIsSidebarOpen(false); // Close sidebar on selection
+          }}
+        >
+          <span
+            className={`flex-grow truncate pr-2 ${
+              seg.completed ? "text-text-secondary line-through" : ""
+            }`}
+          >
+            {seg.title}
+          </span>
+          <span className="text-xs text-text-secondary font-mono ml-2 flex-shrink-0">
+            {formatDuration(seg.duration_seconds)}
+          </span>
+        </div>
+      ))}
+    </>
+  );
+
   return (
     <div className="flex flex-col h-screen bg-background text-text-primary">
-      {/* HEADER SECTION - BUILT DIRECTLY HERE */}
-      <header className="flex-shrink-0 bg-surface-dark shadow-lg z-10 border-b border-surface-light/50">
+      <header className="flex-shrink-0 bg-surface-dark shadow-lg z-30 border-b border-surface-light/50">
         <div className="flex items-center justify-between h-16 px-4 sm:px-6">
-          <Link
-            href={isGuestMode ? "/" : "/dashboard"}
-            className="flex items-center gap-2 text-xl font-bold text-primary"
-          >
-            <BookOpen />
-            <span>YT Course Taker</span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="md:hidden text-text-primary"
+            >
+              <Menu size={24} />
+            </button>
+            <Link
+              href={isGuestMode ? "/" : "/dashboard"}
+              className="flex items-center gap-2 text-xl font-bold text-primary"
+            >
+              <BookOpen />
+              <span className="hidden sm:inline">YT Course Taker</span>
+            </Link>
+          </div>
           <div className="flex items-center gap-4">
             {isGuestMode ? (
               <Link
@@ -197,34 +249,26 @@ export default function CourseViewer({
       </header>
 
       <main className="flex-grow flex overflow-hidden">
-        {/* SIDEBAR */}
-        <aside className="w-[350px] flex-shrink-0 bg-surface border-r border-surface-light overflow-y-auto p-2">
-          <h2 className="text-lg font-bold p-3 text-text-primary truncate">
-            {title}
-          </h2>
-          <div className="border-t border-surface-light my-2"></div>
-          {segments.map((seg, index) => (
-            <div
-              key={index}
-              className={`flex items-center justify-between p-3 mb-1 rounded-lg cursor-pointer transition-colors ${
-                index === currentSegmentIndex
-                  ? "bg-primary/20 text-primary-dark font-semibold"
-                  : "hover:bg-surface-light"
-              }`}
-              onClick={() => displaySegment(index)}
-            >
-              <span
-                className={`flex-grow truncate pr-2 ${
-                  seg.completed ? "text-text-secondary line-through" : ""
-                }`}
-              >
-                {seg.title}
-              </span>
-              <span className="text-xs text-text-secondary font-mono ml-2 flex-shrink-0">
-                {formatDuration(seg.duration_seconds)}
-              </span>
-            </div>
-          ))}
+        {/* DESKTOP SIDEBAR */}
+        <aside className="hidden md:block w-[350px] flex-shrink-0 bg-surface border-r border-surface-light overflow-y-auto p-2">
+          <SegmentList />
+        </aside>
+
+        {/* MOBILE DRAWER OVERLAY */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 z-40 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
+
+        {/* MOBILE DRAWER */}
+        <aside
+          className={`fixed top-0 left-0 h-full w-[350px] max-w-[85vw] bg-surface shadow-xl z-50 transition-transform duration-300 ease-in-out md:hidden ${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <SegmentList />
         </aside>
 
         {/* MAIN CONTENT */}
@@ -282,6 +326,7 @@ export default function CourseViewer({
                 }}
               />
             </div>
+
             <div className="flex items-center gap-4 mb-6">
               <button
                 onClick={() => displaySegment(currentSegmentIndex - 1)}
@@ -317,7 +362,6 @@ export default function CourseViewer({
                   className="w-full min-h-[150px] p-4 bg-surface border border-surface-light rounded-lg focus:ring-2 focus:ring-primary focus:outline-none transition"
                 />
               </div>
-
               <div className="bg-surface p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-xl font-bold text-primary">
