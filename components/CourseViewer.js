@@ -12,8 +12,8 @@ import {
   LogOut,
   Download,
   LogIn,
-  Menu, // Added for mobile menu
-  X, // Added for mobile close button
+  Menu,
+  X,
 } from "lucide-react";
 import jsPDF from "jspdf";
 
@@ -33,7 +33,7 @@ export default function CourseViewer({
   const [courseData, setCourseData] = useState(initialCourseData);
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
   const [activeNote, setActiveNote] = useState("");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for mobile drawer
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const playerRef = useRef(null);
   const segmentCheckInterval = useRef(null);
@@ -41,6 +41,8 @@ export default function CourseViewer({
 
   const { title, segments, videoId } = courseData;
   const currentSegment = segments[currentSegmentIndex];
+
+  // --- No changes to hooks and functions above this line ---
 
   useEffect(() => {
     if (currentSegment) setActiveNote(currentSegment.notes || "");
@@ -159,21 +161,9 @@ export default function CourseViewer({
 
   const completedCount = segments.filter((s) => s.completed).length;
 
-  // Reusable component for the segment list to avoid duplication
-  const SegmentList = () => (
+  // This component now ONLY renders the list items. The container will handle scrolling.
+  const SegmentListItems = () => (
     <>
-      <div className="flex items-center justify-between p-3">
-        <h2 className="text-lg font-bold text-text-primary truncate">
-          {title}
-        </h2>
-        <button
-          onClick={() => setIsSidebarOpen(false)}
-          className="md:hidden p-1 text-text-primary"
-        >
-          <X size={24} />
-        </button>
-      </div>
-      <div className="border-t border-surface-light my-2"></div>
       {segments.map((seg, index) => (
         <div
           key={index}
@@ -249,9 +239,16 @@ export default function CourseViewer({
       </header>
 
       <main className="flex-grow flex overflow-hidden">
-        {/* DESKTOP SIDEBAR */}
-        <aside className="hidden md:block w-[350px] flex-shrink-0 bg-surface border-r border-surface-light overflow-y-auto p-2">
-          <SegmentList />
+        {/* DESKTOP SIDEBAR - MODIFIED FOR STICKY HEADER AND SCROLL */}
+        <aside className="hidden md:flex flex-col w-[350px] flex-shrink-0 bg-surface border-r border-surface-light">
+          <div className="flex-shrink-0 p-3 border-b border-surface-light">
+            <h2 className="text-lg font-bold text-text-primary truncate">
+              {title}
+            </h2>
+          </div>
+          <div className="flex-grow overflow-y-auto p-2">
+            <SegmentListItems />
+          </div>
         </aside>
 
         {/* MOBILE DRAWER OVERLAY */}
@@ -262,18 +259,36 @@ export default function CourseViewer({
           ></div>
         )}
 
-        {/* MOBILE DRAWER */}
+        {/* MOBILE DRAWER - MODIFIED FOR STICKY HEADER AND SCROLL */}
         <aside
-          className={`fixed top-0 left-0 h-full w-[350px] max-w-[85vw] bg-surface shadow-xl z-50 transition-transform duration-300 ease-in-out md:hidden ${
+          className={`fixed top-0 left-0 h-full w-[350px] max-w-[85vw] bg-surface shadow-xl z-50 transition-transform duration-300 ease-in-out md:hidden flex flex-col ${
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <SegmentList />
+          {/* STICKY HEADER */}
+          <div className="flex-shrink-0 p-3 border-b border-surface-light">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-text-primary truncate">
+                {title}
+              </h2>
+              <button
+                onClick={() => setIsSidebarOpen(false)}
+                className="p-1 text-text-primary"
+              >
+                <X size={24} />
+              </button>
+            </div>
+          </div>
+          {/* SCROLLABLE CONTENT */}
+          <div className="flex-grow overflow-y-auto p-2">
+            <SegmentListItems />
+          </div>
         </aside>
 
-        {/* MAIN CONTENT */}
+        {/* MAIN CONTENT (No changes needed here) */}
         <div className="flex-grow p-4 md:p-6 lg:p-8 overflow-y-auto bg-background">
           <div className="max-w-4xl mx-auto">
+            {/* ... all main content JSX remains the same ... */}
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
               <div className="flex-grow">
                 <h2 className="text-2xl md:text-3xl font-bold text-text-primary">
@@ -304,7 +319,6 @@ export default function CourseViewer({
                 )}
               </button>
             </div>
-
             <div className="w-full aspect-video bg-black rounded-xl shadow-2xl mb-4 overflow-hidden">
               <YouTube
                 videoId={videoId}
@@ -326,7 +340,6 @@ export default function CourseViewer({
                 }}
               />
             </div>
-
             <div className="flex items-center gap-4 mb-6">
               <button
                 onClick={() => displaySegment(currentSegmentIndex - 1)}
@@ -349,7 +362,6 @@ export default function CourseViewer({
                 <ChevronRight size={24} />
               </button>
             </div>
-
             <div className="space-y-6">
               <div>
                 <h3 className="text-xl font-bold text-primary mb-2">
