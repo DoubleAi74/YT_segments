@@ -2,7 +2,7 @@
 "use client";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { BookOpen, LogOut, Download, LogIn, Menu } from "lucide-react";
+import { BookOpen, LogOut, Download, LogIn } from "lucide-react";
 
 export default function CourseHeader({
   courseTitle,
@@ -10,30 +10,20 @@ export default function CourseHeader({
   totalSegments,
   handleExportNotes,
   isGuestMode = false,
-  onMenuClick,
 }) {
   const { user, logout } = useAuth();
 
   return (
-    <header className="flex-shrink-0 bg-surface-dark shadow-lg z-20">
+    <header className="flex-shrink-0 bg-surface-dark shadow-lg z-10">
       {/* Top bar: App Logo & User/Actions */}
-      <div className="flex items-center justify-between h-16 px-4 sm:px-6 border-b border-surface-light/50">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onMenuClick}
-            className="md:hidden p-1 text-text-primary"
-            aria-label="Open course menu"
-          >
-            <Menu size={24} />
-          </button>
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 text-xl font-bold text-primary"
-          >
-            <BookOpen />
-            <span className="hidden sm:inline">YT Course Taker</span>
-          </Link>
-        </div>
+      {/* <div className="flex items-center justify-between h-16 px-4 sm:px-6 border-b border-surface-light/50">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2 text-xl font-bold text-primary"
+        >
+          <BookOpen />
+          <span>YT Course Taker</span>
+        </Link>
         <div className="flex items-center gap-4">
           {isGuestMode ? (
             <Link
@@ -58,9 +48,9 @@ export default function CourseHeader({
             </>
           )}
         </div>
-      </div>
+      </div> */}
 
-      {/* Bottom bar: Course Title & Progress */}
+      {/* Bottom bar: Course Title & Progress
       <div className="flex items-center justify-between h-12 px-4 sm:px-6">
         <h1
           className="text-lg font-bold text-text-primary truncate"
@@ -74,7 +64,7 @@ export default function CourseHeader({
             className="flex items-center gap-2 text-sm text-text-secondary hover:text-primary transition-colors"
           >
             <Download size={16} />
-            <span className="hidden sm:inline">Export Notes</span>
+            <span>Export Notes</span>
           </button>
           <div className="text-sm font-semibold text-primary">
             {`${completedCount}/${totalSegments} Completed (${
@@ -84,7 +74,7 @@ export default function CourseHeader({
             }%)`}
           </div>
         </div>
-      </div>
+      </div> */}
     </header>
   );
 }

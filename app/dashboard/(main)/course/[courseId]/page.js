@@ -9,6 +9,7 @@ import CourseHeader from "@/components/CourseHeader";
 import CourseViewer from "@/components/CourseViewer";
 import { useRouter, useParams } from "next/navigation";
 import jsPDF from "jspdf";
+import { BookOpen, LogOut, Download, LogIn } from "lucide-react";
 
 export default function CoursePage() {
   const { user } = useAuth();
@@ -121,6 +122,13 @@ export default function CoursePage() {
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
         />
+        <button
+          onClick={handleExportNotes}
+          className="flex items-center gap-2 text-sm text-text-secondary hover:text-primary transition-colors"
+        >
+          <Download size={16} />
+          <span>Export Notes</span>
+        </button>
       </div>
     );
   }

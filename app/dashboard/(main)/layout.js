@@ -26,7 +26,7 @@ export default function DashboardLayout({ children }) {
   if (user) {
     return (
       <div className="min-h-screen bg-light-background">
-        <Navbar />
+        {/* <Navbar /> */}
         <main>{children}</main>
       </div>
     );

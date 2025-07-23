@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import Link from "next/link";
 
 export default function NewCoursePage() {
   const [url, setUrl] = useState("");
@@ -54,7 +55,13 @@ export default function NewCoursePage() {
 
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Add a New Course</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-black text-3xl font-bold ">Add a New Course</h1>
+        <Link href="/dashboard" className="text-black font-bold text-xl">
+          &lt;- Go back
+        </Link>
+      </div>
+
       <form onSubmit={handleAddCourse} className="max-w-lg">
         <div className="mb-4">
           <label
@@ -69,7 +76,7 @@ export default function NewCoursePage() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="Paste a YouTube URL with timestamps"
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full p-3 border border-gray-300 rounded-lg text-black focus:ring-2 focus:ring-blue-500 focus:outline-none"
             required
           />
         </div>

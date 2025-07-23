@@ -6,7 +6,9 @@ export default function TryPage() {
   const [courseData, setCourseData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(
+    "https://youtu.be/EH5jx5qPabU?si=g5TMGnc1uriPhsw4"
+  );
 
   const handleLoadCourse = async (e) => {
     e.preventDefault();
@@ -41,15 +43,16 @@ export default function TryPage() {
       <div className="w-full max-w-lg text-center">
         <h1 className="text-4xl font-bold text-primary mb-2">Try a Demo</h1>
         <p className="text-text-secondary mb-8">
-          Paste a YouTube URL with timestamps to start a guest session. Your
-          progress won&apos;t be saved.
+          Paste a YouTube URL. The video should have will be broken into
+          segments by its chapters. OR just run the preset course by pressing
+          Go.
         </p>
         <form onSubmit={handleLoadCourse} className="flex gap-2">
           <input
             type="text"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://www.youtube.com/watch?v=..."
+            placeholder="https://youtu.be/EH5jx5qPabU?si=g5TMGnc1uriPhsw4"
             className="flex-grow p-3 bg-surface border border-surface-light rounded-lg focus:ring-2 focus:ring-primary focus:outline-none transition"
             required
           />
@@ -58,7 +61,7 @@ export default function TryPage() {
             disabled={isLoading}
             className="px-6 py-3 bg-primary text-background font-bold rounded-lg shadow-md hover:bg-primary-dark disabled:bg-surface-light transition-colors"
           >
-            {isLoading ? "Loading..." : "Load"}
+            {isLoading ? "Loading..." : "Go"}
           </button>
         </form>
         {error && <p className="text-error mt-4">{error}</p>}
