@@ -1,27 +1,26 @@
+// app/dashboard/(main)/course/[courseId]/page.js
+
 "use client";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
+import CourseHeader from "@/components/CourseHeader";
 import CourseViewer from "@/components/CourseViewer";
-// CHANGE 1: Import useParams along with useRouter
 import { useRouter, useParams } from "next/navigation";
+import jsPDF from "jspdf";
 
-// CHANGE 2: The component no longer needs to accept a 'params' prop
 export default function CoursePage() {
   const { user } = useAuth();
   const router = useRouter();
-
-  // CHANGE 3: Get the courseId using the useParams hook
-  // This is the idiomatic way for Client Components.
   const params = useParams();
   const courseId = params.courseId;
 
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // The rest of the logic remains exactly the same!
   useEffect(() => {
     if (!user || !courseId) return;
 
@@ -45,16 +44,43 @@ export default function CoursePage() {
 
   const handleSegmentUpdate = async (segmentIndex, updatedSegment) => {
     if (!courseData) return;
-
     const newSegments = [...courseData.segments];
     newSegments[segmentIndex] = updatedSegment;
-
     setCourseData({ ...courseData, segments: newSegments });
-
     const courseRef = doc(db, "courses", courseId);
     await updateDoc(courseRef, {
       segments: newSegments,
     });
+  };
+
+  const handleExportNotes = () => {
+    if (!courseData) return;
+    const { title, segments } = courseData;
+    const doc = new jsPDF();
+    let y = 15;
+    const margin = 15;
+    const maxWidth = doc.internal.pageSize.getWidth() - margin * 2;
+    doc.setFontSize(18);
+    doc.text(title, margin, y);
+    y += 10;
+    segments.forEach((seg) => {
+      if (seg.notes && seg.notes.trim() !== "") {
+        if (y > 270) {
+          doc.addPage();
+          y = 15;
+        }
+        doc.setFontSize(14);
+        doc.setFont(undefined, "bold");
+        doc.text(seg.title, margin, y);
+        y += 7;
+        doc.setFontSize(11);
+        doc.setFont(undefined, "normal");
+        const noteLines = doc.splitTextToSize(seg.notes, maxWidth);
+        doc.text(noteLines, margin, y);
+        y += noteLines.length * 5 + 5;
+      }
+    });
+    doc.save(`${title.replace(/ /g, "_")}_notes.pdf`);
   };
 
   if (loading) {
@@ -74,12 +100,28 @@ export default function CoursePage() {
   }
 
   if (courseData) {
+    const completedCount = courseData.segments.filter(
+      (s) => s.completed
+    ).length;
+
     return (
-      <CourseViewer
-        initialCourseData={courseData}
-        onSegmentChange={handleSegmentUpdate}
-        isGuestMode={false}
-      />
+      <div className="flex flex-col h-screen bg-background text-text-primary">
+        <CourseHeader
+          courseTitle={courseData.title}
+          completedCount={completedCount}
+          totalSegments={courseData.segments.length}
+          handleExportNotes={handleExportNotes}
+          isGuestMode={false}
+          onMenuClick={() => setIsSidebarOpen(true)}
+        />
+        <CourseViewer
+          initialCourseData={courseData}
+          onSegmentChange={handleSegmentUpdate}
+          isGuestMode={false}
+          isSidebarOpen={isSidebarOpen}
+          setIsSidebarOpen={setIsSidebarOpen}
+        />
+      </div>
     );
   }
 

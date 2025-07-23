@@ -15,7 +15,6 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import jsPDF from "jspdf";
 
 const formatDuration = (seconds) => {
   if (isNaN(seconds) || seconds < 0) return "0:00";
@@ -28,12 +27,13 @@ export default function CourseViewer({
   initialCourseData,
   onSegmentChange,
   isGuestMode = false,
+  isSidebarOpen,
+  setIsSidebarOpen,
 }) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth(); // Note: `logout` is imported but not used, can be removed
   const [courseData, setCourseData] = useState(initialCourseData);
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
   const [activeNote, setActiveNote] = useState("");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const playerRef = useRef(null);
   const segmentCheckInterval = useRef(null);
@@ -41,8 +41,6 @@ export default function CourseViewer({
 
   const { title, segments, videoId } = courseData;
   const currentSegment = segments[currentSegmentIndex];
-
-  // --- No changes to hooks and functions above this line ---
 
   useEffect(() => {
     if (currentSegment) setActiveNote(currentSegment.notes || "");
@@ -80,7 +78,6 @@ export default function CourseViewer({
 
   const handleStateChange = (event) => {
     if (event.data === 1) {
-      // Playing
       if (segmentCheckInterval.current)
         clearInterval(segmentCheckInterval.current);
       const progressBar = document.getElementById("segment-progress-bar");
@@ -131,37 +128,8 @@ export default function CourseViewer({
     }
   };
 
-  const handleExportNotes = () => {
-    const doc = new jsPDF();
-    let y = 15;
-    const margin = 15;
-    const maxWidth = doc.internal.pageSize.getWidth() - margin * 2;
-    doc.setFontSize(18);
-    doc.text(title, margin, y);
-    y += 10;
-    segments.forEach((seg) => {
-      if (seg.notes && seg.notes.trim() !== "") {
-        if (y > 270) {
-          doc.addPage();
-          y = 15;
-        }
-        doc.setFontSize(14);
-        doc.setFont(undefined, "bold");
-        doc.text(seg.title, margin, y);
-        y += 7;
-        doc.setFontSize(11);
-        doc.setFont(undefined, "normal");
-        const noteLines = doc.splitTextToSize(seg.notes, maxWidth);
-        doc.text(noteLines, margin, y);
-        y += noteLines.length * 5 + 5;
-      }
-    });
-    doc.save(`${title.replace(/ /g, "_")}_notes.pdf`);
-  };
-
   const completedCount = segments.filter((s) => s.completed).length;
 
-  // This component now ONLY renders the list items. The container will handle scrolling.
   const SegmentListItems = () => (
     <>
       {segments.map((seg, index) => (
@@ -193,177 +161,163 @@ export default function CourseViewer({
   );
 
   return (
-    <div className="flex flex-col h-screen bg-background text-text-primary">
-      
+    <main className="flex-grow flex overflow-hidden">
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden md:flex flex-col w-[350px] flex-shrink-0 bg-surface border-r border-surface-light">
+        <div className="flex-shrink-0 p-3 border-b border-surface-light">
+          <h2 className="text-lg font-bold text-text-primary truncate">
+            {title}
+          </h2>
+        </div>
+        <div className="flex-grow overflow-y-auto p-2">
+          <SegmentListItems />
+        </div>
+      </aside>
 
-      <main className="flex-grow flex overflow-hidden">
-        {/* DESKTOP SIDEBAR - MODIFIED FOR STICKY HEADER AND SCROLL */}
-        <aside className="hidden md:flex flex-col w-[350px] flex-shrink-0 bg-surface border-r border-surface-light">
-          <div className="flex-shrink-0 p-3 border-b border-surface-light">
+      {/* MOBILE DRAWER OVERLAY */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
+      {/* MOBILE DRAWER */}
+      <aside
+        className={`fixed top-0 left-0 h-full w-[350px] max-w-[85vw] bg-surface shadow-xl z-50 transition-transform duration-300 ease-in-out md:hidden flex flex-col ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex-shrink-0 p-3 border-b border-surface-light">
+          <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-text-primary truncate">
               {title}
             </h2>
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-1 text-text-primary"
+            >
+              <X size={24} />
+            </button>
           </div>
-          <div className="flex-grow overflow-y-auto p-2">
-            <SegmentListItems />
-          </div>
-        </aside>
+        </div>
+        <div className="flex-grow overflow-y-auto p-2">
+          <SegmentListItems />
+        </div>
+      </aside>
 
-        {/* MOBILE DRAWER OVERLAY */}
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/60 z-40 md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          ></div>
-        )}
-
-        {/* MOBILE DRAWER - MODIFIED FOR STICKY HEADER AND SCROLL */}
-        <aside
-          className={`fixed top-0 left-0 h-full w-[350px] max-w-[85vw] bg-surface shadow-xl z-50 transition-transform duration-300 ease-in-out md:hidden flex flex-col ${
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          {/* STICKY HEADER */}
-          <div className="flex-shrink-0 p-3 border-b border-surface-light">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-text-primary truncate">
-                {title}
+      {/* MAIN CONTENT */}
+      <div className="flex-grow p-4 md:p-6 lg:p-8 overflow-y-auto bg-background">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
+            <div className="flex-grow">
+              <h2 className="text-2xl md:text-3xl font-bold text-text-primary">
+                {currentSegment?.title}
               </h2>
-              <button
-                onClick={() => setIsSidebarOpen(false)}
-                className="p-1 text-text-primary"
-              >
-                <X size={24} />
-              </button>
-            </div>
-          </div>
-          {/* SCROLLABLE CONTENT */}
-          <div className="flex-grow overflow-y-auto p-2">
-            <SegmentListItems />
-          </div>
-        </aside>
-
-        {/* MAIN CONTENT (No changes needed here) */}
-        <div className="flex-grow p-4 md:p-6 lg:p-8 overflow-y-auto bg-background">
-          <div className="max-w-4xl mx-auto">
-            {/* ... all main content JSX remains the same ... */}
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
-              <div className="flex-grow">
-                <h2 className="text-2xl md:text-3xl font-bold text-text-primary">
-                  {currentSegment?.title}
-                </h2>
+              {/* This progress indicator is now in the header, so it's commented out here to avoid duplication */}
+              {/* 
                 <div className="text-sm font-semibold text-primary mt-1">
                   {`${completedCount}/${segments.length} Completed (${
                     segments.length > 0
                       ? Math.round((completedCount / segments.length) * 100)
                       : 0
                   }%)`}
-                </div>
-              </div>
-              <button
-                onClick={() => handleToggleCompletion(currentSegmentIndex)}
-                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
-                  currentSegment?.completed
-                    ? "bg-success text-background"
-                    : "bg-surface-light hover:bg-surface-light/80 text-text-primary"
-                }`}
-              >
-                {currentSegment?.completed ? (
-                  <>
-                    <CheckCircle size={18} /> Completed
-                  </>
-                ) : (
-                  "Mark as Complete"
-                )}
-              </button>
+                </div> 
+              */}
             </div>
-            <div className="w-full aspect-video bg-black rounded-xl shadow-2xl mb-4 overflow-hidden">
-              <YouTube
-                videoId={videoId}
-                className="w-full h-full"
-                onReady={(event) => {
-                  playerRef.current = event.target;
-                }}
-                onStateChange={handleStateChange}
-                opts={{
-                  width: "100%",
-                  height: "100%",
-                  playerVars: {
-                    playsinline: 1,
-                    modestbranding: 1,
-                    rel: 0,
-                    autoplay: 1,
-                    color: "white",
-                  },
-                }}
+            <button
+              onClick={() => handleToggleCompletion(currentSegmentIndex)}
+              className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
+                currentSegment?.completed
+                  ? "bg-success text-background"
+                  : "bg-surface-light hover:bg-surface-light/80 text-text-primary"
+              }`}
+            >
+              {currentSegment?.completed ? (
+                <>
+                  <CheckCircle size={18} /> Completed
+                </>
+              ) : (
+                "Mark as Complete"
+              )}
+            </button>
+          </div>
+          <div className="w-full aspect-video bg-black rounded-xl shadow-2xl mb-4 overflow-hidden">
+            <YouTube
+              videoId={videoId}
+              className="w-full h-full"
+              onReady={(event) => {
+                playerRef.current = event.target;
+              }}
+              onStateChange={handleStateChange}
+              opts={{
+                width: "100%",
+                height: "100%",
+                playerVars: {
+                  playsinline: 1,
+                  modestbranding: 1,
+                  rel: 0,
+                  autoplay: 1,
+                  color: "white",
+                },
+              }}
+            />
+          </div>
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => displaySegment(currentSegmentIndex - 1)}
+              disabled={currentSegmentIndex === 0}
+              className="p-2 rounded-full bg-surface shadow-md hover:bg-surface-light disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <div className="w-full bg-surface-light rounded-full h-2 overflow-hidden">
+              <div
+                id="segment-progress-bar"
+                className="bg-primary h-2 rounded-full transition-all duration-250"
+              ></div>
+            </div>
+            <button
+              onClick={playNextAndComplete}
+              disabled={currentSegmentIndex >= segments.length - 1}
+              className="p-2 rounded-full bg-surface shadow-md hover:bg-surface-light disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </div>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-xl font-bold text-primary mb-2">My Notes</h3>
+              <textarea
+                placeholder="Your notes for the current segment..."
+                value={activeNote}
+                onChange={(e) => setActiveNote(e.target.value)}
+                className="w-full min-h-[150px] p-4 bg-surface border border-surface-light rounded-lg focus:ring-2 focus:ring-primary focus:outline-none transition"
               />
             </div>
-            <div className="flex items-center gap-4 mb-6">
-              <button
-                onClick={() => displaySegment(currentSegmentIndex - 1)}
-                disabled={currentSegmentIndex === 0}
-                className="p-2 rounded-full bg-surface shadow-md hover:bg-surface-light disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft size={24} />
-              </button>
-              <div className="w-full bg-surface-light rounded-full h-2 overflow-hidden">
-                <div
-                  id="segment-progress-bar"
-                  className="bg-primary h-2 rounded-full transition-all duration-250"
-                ></div>
-              </div>
-              <button
-                onClick={playNextAndComplete}
-                disabled={currentSegmentIndex >= segments.length - 1}
-                className="p-2 rounded-full bg-surface shadow-md hover:bg-surface-light disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronRight size={24} />
-              </button>
-            </div>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-bold text-primary mb-2">
-                  My Notes
-                </h3>
-                <textarea
-                  placeholder="Your notes for the current segment..."
-                  value={activeNote}
-                  onChange={(e) => setActiveNote(e.target.value)}
-                  className="w-full min-h-[150px] p-4 bg-surface border border-surface-light rounded-lg focus:ring-2 focus:ring-primary focus:outline-none transition"
-                />
-              </div>
-              <div className="bg-surface p-4 rounded-lg">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-xl font-bold text-primary">
-                    Segment Summary
-                  </h3>
-                  <button
-                    onClick={handleExportNotes}
-                    className="flex items-center gap-2 text-sm text-text-secondary hover:text-primary transition-colors"
-                  >
-                    <Download size={16} />
-                    <span>Export All Notes</span>
-                  </button>
-                </div>
-                <ul className="text-text-secondary space-y-1 text-sm">
-                  <li>
-                    <strong className="text-text-primary">Starts:</strong>{" "}
-                    {formatDuration(currentSegment?.start_seconds)}
-                  </li>
-                  <li>
-                    <strong className="text-text-primary">Ends:</strong>{" "}
-                    {formatDuration(currentSegment?.end_seconds)}
-                  </li>
-                  <li>
-                    <strong className="text-text-primary">Duration:</strong>{" "}
-                    {formatDuration(currentSegment?.duration_seconds)}
-                  </li>
-                </ul>
-              </div>
+            <div className="bg-surface p-4 rounded-lg">
+              <h3 className="text-xl font-bold text-primary mb-3">
+                Segment Summary
+              </h3>
+              {/* The export button is now in the header, so it's removed from here */}
+              <ul className="text-text-secondary space-y-1 text-sm">
+                <li>
+                  <strong className="text-text-primary">Starts:</strong>{" "}
+                  {formatDuration(currentSegment?.start_seconds)}
+                </li>
+                <li>
+                  <strong className="text-text-primary">Ends:</strong>{" "}
+                  {formatDuration(currentSegment?.end_seconds)}
+                </li>
+                <li>
+                  <strong className="text-text-primary">Duration:</strong>{" "}
+                  {formatDuration(currentSegment?.duration_seconds)}
+                </li>
+              </ul>
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
