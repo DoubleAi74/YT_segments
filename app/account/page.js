@@ -10,8 +10,8 @@ import {
 
 export default function AccountPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("open@usr.go");
+  const [password, setPassword] = useState("Passit");
   const [error, setError] = useState(null);
   const router = useRouter();
 
@@ -34,10 +34,11 @@ export default function AccountPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-4">
-          <Link href="/"
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              &larr; Back to Home
+          <Link
+            href="/"
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            &larr; Back to Home
           </Link>
         </div>
         <div className="p-8 space-y-6 bg-surface rounded-2xl shadow-card">
